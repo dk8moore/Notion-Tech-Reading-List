@@ -29,11 +29,13 @@ def main():
       for message in messages:
         msg = service.users().messages().get(userId='me', id=message['id']).execute()
         good_msg = {}
+        # Mail handler
+        good_msg['id'] = msg['id']
+        good_msg['labelIds'] = msg['labelIds']
         # Headers handler
         for header in msg['payload']['headers']:
           if header['name'] in ['From', 'Subject', 'Date']:
             good_msg[header['name'].lower()] = header['value']
-        # good_msg['body'] = base64.b64decode(msg['payload']['body'])
         # Body handler: body could be split into parts if the email is too long
         # AFAIK if the body object has no attribute "data", then there's another attribute "parts" containing all the parts (you don't say?!) of the body into other body objects
         if 'data' in msg['payload']['body']:
@@ -42,6 +44,7 @@ def main():
           good_msg['body'] = ''
           for part in msg['payload']['parts']:
             good_msg['body'] += base64.urlsafe_b64decode(part['body']['data']).decode('utf-8')
+        # print(good_msg)
 
   except HttpError as error:
     # TODO(developer) - Handle errors from gmail API.
