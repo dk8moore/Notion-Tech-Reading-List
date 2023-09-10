@@ -1,4 +1,4 @@
-import os.path, base64
+import os.path, base64, dateutil.parser as date_parser
 import config
 
 from google.auth.transport.requests import Request
@@ -36,6 +36,8 @@ def main():
         for header in msg['payload']['headers']:
           if header['name'] in ['From', 'Subject', 'Date']:
             good_msg[header['name'].lower()] = header['value']
+            if header['name'] == 'Date':
+              good_msg['date'] = date_parser.parse(header['value']).isoformat()
         # Body handler: body could be split into parts if the email is too long
         # AFAIK if the body object has no attribute "data", then there's another attribute "parts" containing all the parts (you don't say?!) of the body into other body objects
         if 'data' in msg['payload']['body']:
@@ -44,7 +46,7 @@ def main():
           good_msg['body'] = ''
           for part in msg['payload']['parts']:
             good_msg['body'] += base64.urlsafe_b64decode(part['body']['data']).decode('utf-8')
-        # print(good_msg)
+        print(good_msg)
 
   except HttpError as error:
     # TODO(developer) - Handle errors from gmail API.
